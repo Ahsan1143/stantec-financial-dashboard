@@ -1,0 +1,217 @@
+// =============================================================================
+// Stantec Financial Performance Dashboard: DAX measures
+//
+// All 75 measures in Stantec_Financial_Dashboard.pbix, grouped by display folder.
+// Format strings are set in the model (amounts #,0.0 in C$ millions; percentages 0.0%;
+// ratios 0.0x; per-share $0.00; KPI card values in $B / $M).
+//
+// To check the numbers: open the .pbix, go to DAX query view, paste this file and click Run.
+//
+// Model: DimYear[Year] 1-* FactFinancials[Year]; DimYear[Year] 1-* FactSegment[Year].
+// Valuation, Sensitivity, Comps and EVBridge are standalone lookup tables from the DCF model.
+// =============================================================================
+DEFINE
+
+	// ---------- 1. Income statement
+	// Gross revenue, C$ millions.
+	MEASURE _Measures[Gross Revenue] = SUM ( FactFinancials[GrossRevenue] )
+	// Gross revenue less subconsultant and other direct expenses, C$ millions.
+	MEASURE _Measures[Net Revenue] = SUM ( FactFinancials[NetRevenue] )
+	// Net revenue less direct payroll, C$ millions.
+	MEASURE _Measures[Project Margin] = SUM ( FactFinancials[ProjectMargin] )
+	MEASURE _Measures[Admin & Marketing] = SUM ( FactFinancials[AdminMarketing] )
+	MEASURE _Measures[EBIT] = SUM ( FactFinancials[EBIT] )
+	MEASURE _Measures[Net Income] = SUM ( FactFinancials[NetIncome] )
+	// Adjusted EBITDA as reported by Stantec, C$ millions.
+	MEASURE _Measures[Adj EBITDA] = SUM ( FactFinancials[AdjEBITDA_Reported] )
+	MEASURE _Measures[Operating Cash Flow] = SUM ( FactFinancials[OperatingCashFlow] )
+	MEASURE _Measures[Capex] = SUM ( FactFinancials[Capex] )
+	// Contract backlog at year end, C$ millions.
+	MEASURE _Measures[Backlog] = SUM ( FactFinancials[Backlog] )
+
+	// ---------- 2. Balance sheet & credit
+	// Total debt (excluding leases) less cash, C$ millions.
+	MEASURE _Measures[Net Debt] = SUM ( FactFinancials[TotalDebt] ) - SUM ( FactFinancials[Cash] )
+	// Net debt to adjusted EBITDA as reported (management target 1.0-2.0x).
+	MEASURE _Measures[Net Debt to Adj EBITDA] = MAX ( FactFinancials[NetDebtToAdjEBITDA_Reported] )
+	// Days sales outstanding as reported.
+	MEASURE _Measures[DSO Days] = MAX ( FactFinancials[DSO_Reported] )
+
+	// ---------- 3. Margins & ratios
+	MEASURE _Measures[Project Margin %] = DIVIDE ( [Project Margin], [Net Revenue] )
+	MEASURE _Measures[Adj EBITDA Margin %] = DIVIDE ( [Adj EBITDA], [Net Revenue] )
+	MEASURE _Measures[EBIT Margin %] = DIVIDE ( [EBIT], [Net Revenue] )
+	MEASURE _Measures[Net Income Margin %] = DIVIDE ( [Net Income], [Net Revenue] )
+	MEASURE _Measures[Admin & Marketing %] = DIVIDE ( [Admin & Marketing], [Net Revenue] )
+	// Operating cash flow divided by net income.
+	MEASURE _Measures[Cash Conversion] = DIVIDE ( [Operating Cash Flow], [Net Income] )
+
+	// ---------- 4. Growth
+	MEASURE _Measures[Net Revenue PY] =
+		VAR _yr = MAX ( DimYear[Year] )
+		RETURN
+		    CALCULATE ( [Net Revenue], REMOVEFILTERS ( DimYear ), DimYear[Year] = _yr - 1 )
+	MEASURE _Measures[Net Revenue YoY %] = DIVIDE ( [Net Revenue] - [Net Revenue PY], [Net Revenue PY] )
+	MEASURE _Measures[Net Income PY] =
+		VAR _yr = MAX ( DimYear[Year] )
+		RETURN
+		    CALCULATE ( [Net Income], REMOVEFILTERS ( DimYear ), DimYear[Year] = _yr - 1 )
+	MEASURE _Measures[Net Income YoY %] = DIVIDE ( [Net Income] - [Net Income PY], [Net Income PY] )
+	MEASURE _Measures[Backlog PY] =
+		VAR _yr = MAX ( DimYear[Year] )
+		RETURN
+		    CALCULATE ( [Backlog], REMOVEFILTERS ( DimYear ), DimYear[Year] = _yr - 1 )
+	MEASURE _Measures[Backlog YoY %] = DIVIDE ( [Backlog] - [Backlog PY], [Backlog PY] )
+	MEASURE _Measures[Adj EBITDA Margin PY %] =
+		VAR _yr = MAX ( DimYear[Year] )
+		RETURN
+		    CALCULATE ( [Adj EBITDA Margin %], REMOVEFILTERS ( DimYear ), DimYear[Year] = _yr - 1 )
+	// Change in adjusted EBITDA margin vs. prior year (percentage points).
+	MEASURE _Measures[Adj EBITDA Margin Change] = [Adj EBITDA Margin %] - [Adj EBITDA Margin PY %]
+
+	// ---------- 5. Regions
+	MEASURE _Measures[Segment Net Revenue] = SUM ( FactSegment[NetRevenue] )
+	MEASURE _Measures[Segment Share %] = DIVIDE ( [Segment Net Revenue], CALCULATE ( [Segment Net Revenue], REMOVEFILTERS ( FactSegment[Segment] ) ) )
+	MEASURE _Measures[Segment Net Revenue PY] =
+		VAR _yr = MAX ( DimYear[Year] )
+		RETURN
+		    CALCULATE ( [Segment Net Revenue], REMOVEFILTERS ( DimYear ), DimYear[Year] = _yr - 1 )
+	MEASURE _Measures[Segment YoY %] = DIVIDE ( [Segment Net Revenue] - [Segment Net Revenue PY], [Segment Net Revenue PY] )
+	// Segment net revenue in the latest reported year.
+	MEASURE _Measures[Segment Net Revenue Latest] =
+		VAR _y = [Latest Actual Year]
+		RETURN
+		    CALCULATE ( [Segment Net Revenue], REMOVEFILTERS ( DimYear ), DimYear[Year] = _y )
+	// Segment growth in the latest reported year.
+	MEASURE _Measures[Segment Growth Latest] =
+		VAR _y = [Latest Actual Year]
+		VAR _cur = CALCULATE ( [Segment Net Revenue], REMOVEFILTERS ( DimYear ), DimYear[Year] = _y )
+		VAR _prev = CALCULATE ( [Segment Net Revenue], REMOVEFILTERS ( DimYear ), DimYear[Year] = _y - 1 )
+		RETURN
+		    DIVIDE ( _cur - _prev, _prev )
+	// Segment growth in the year before the latest reported year.
+	MEASURE _Measures[Segment Growth Prior Year] =
+		VAR _y = [Latest Actual Year] - 1
+		VAR _cur = CALCULATE ( [Segment Net Revenue], REMOVEFILTERS ( DimYear ), DimYear[Year] = _y )
+		VAR _prev = CALCULATE ( [Segment Net Revenue], REMOVEFILTERS ( DimYear ), DimYear[Year] = _y - 1 )
+		RETURN
+		    DIVIDE ( _cur - _prev, _prev )
+
+	// ---------- 6. Forecast & DCF
+	MEASURE _Measures[Net Revenue Actual] = CALCULATE ( [Net Revenue], DimYear[Scenario] = "Actual" )
+	MEASURE _Measures[Net Revenue Forecast] = CALCULATE ( [Net Revenue], DimYear[Scenario] = "Forecast" )
+	// NOPAT + D&A - capex - increase in net working capital, C$ millions.
+	MEASURE _Measures[Unlevered FCF] = SUM ( FactFinancials[UnleveredFCF] )
+	// Unlevered FCF discounted at the model's WACC.
+	MEASURE _Measures[PV of Unlevered FCF] = SUM ( FactFinancials[PV_UnleveredFCF] )
+	MEASURE _Measures[Net Revenue CAGR 2025-2030] =
+		VAR _start = CALCULATE ( [Net Revenue], REMOVEFILTERS ( DimYear ), DimYear[Year] = 2025 )
+		VAR _end = CALCULATE ( [Net Revenue], REMOVEFILTERS ( DimYear ), DimYear[Year] = 2030 )
+		RETURN
+		    IF ( _start > 0, ( _end / _start ) ^ ( 1 / 5 ) - 1 )
+
+	// ---------- 7. Valuation
+	MEASURE _Measures[DCF Value per Share] = LOOKUPVALUE ( Valuation[Value], Valuation[Metric], "DCF value per share" )
+	// Value per share at the peer median EV/EBITDA multiple.
+	MEASURE _Measures[Comps Value per Share] = LOOKUPVALUE ( Valuation[Value], Valuation[Metric], "Comps value per share" )
+	// TSX share price, October 2026.
+	MEASURE _Measures[Share Price] = LOOKUPVALUE ( Valuation[Value], Valuation[Metric], "Share price" )
+	MEASURE _Measures[DCF Upside %] = DIVIDE ( [DCF Value per Share], [Share Price] ) - 1
+	MEASURE _Measures[WACC] = LOOKUPVALUE ( Valuation[Value], Valuation[Metric], "WACC" )
+	MEASURE _Measures[Cost of Equity] = LOOKUPVALUE ( Valuation[Value], Valuation[Metric], "Cost of equity" )
+	MEASURE _Measures[Terminal Growth] = LOOKUPVALUE ( Valuation[Value], Valuation[Metric], "Terminal growth" )
+	MEASURE _Measures[Enterprise Value] = LOOKUPVALUE ( Valuation[Value], Valuation[Metric], "Enterprise value" )
+	MEASURE _Measures[Equity Value] = LOOKUPVALUE ( Valuation[Value], Valuation[Metric], "Equity value" )
+	MEASURE _Measures[Terminal Value % of EV] = LOOKUPVALUE ( Valuation[Value], Valuation[Metric], "Terminal value % of EV" )
+	MEASURE _Measures[Peer Median EV/EBITDA] = LOOKUPVALUE ( Valuation[Value], Valuation[Metric], "Peer median EV/EBITDA" )
+	MEASURE _Measures[EV/EBITDA] = AVERAGE ( Comps[EV_EBITDA] )
+	MEASURE _Measures[Sensitivity Value per Share] = AVERAGE ( Sensitivity[ValuePerShare] )
+	MEASURE _Measures[Sensitivity Low] = MIN ( Sensitivity[ValuePerShare] )
+	MEASURE _Measures[Sensitivity High] = MAX ( Sensitivity[ValuePerShare] )
+	MEASURE _Measures[EV Bridge Amount] = SUM ( EVBridge[Amount] )
+
+	// ---------- 8. KPI cards
+	// Latest fiscal year with reported results. KPI cards use it so they always show the most recent actuals.
+	MEASURE _Measures[Latest Actual Year] = CALCULATE ( MAX ( DimYear[Year] ), REMOVEFILTERS ( DimYear ), DimYear[Scenario] = "Actual" )
+	// Latest-year net revenue in C$ billions.
+	MEASURE _Measures[KPI Net Revenue] =
+		VAR _y = [Latest Actual Year]
+		RETURN
+		    CALCULATE ( DIVIDE ( [Net Revenue], 1000 ), REMOVEFILTERS ( DimYear ), DimYear[Year] = _y )
+	MEASURE _Measures[KPI Net Revenue Label] =
+		VAR _y = [Latest Actual Year]
+		VAR _g = CALCULATE ( [Net Revenue YoY %], REMOVEFILTERS ( DimYear ), DimYear[Year] = _y )
+		RETURN
+		    IF ( _g >= 0, "▲ ", "▼ " ) & FORMAT ( _g, "+0.0%;-0.0%" ) & " vs. FY" & ( _y - 1 )
+	MEASURE _Measures[KPI Adj EBITDA Margin] =
+		VAR _y = [Latest Actual Year]
+		RETURN
+		    CALCULATE ( [Adj EBITDA Margin %], REMOVEFILTERS ( DimYear ), DimYear[Year] = _y )
+	MEASURE _Measures[KPI Adj EBITDA Margin Label] =
+		VAR _y = [Latest Actual Year]
+		VAR _c = CALCULATE ( [Adj EBITDA Margin Change], REMOVEFILTERS ( DimYear ), DimYear[Year] = _y )
+		RETURN
+		    IF ( _c >= 0, "▲ ", "▼ " ) & FORMAT ( _c * 100, "+0.0;-0.0" ) & " pts vs. FY" & ( _y - 1 )
+	// Latest-year net income in C$ millions.
+	MEASURE _Measures[KPI Net Income] =
+		VAR _y = [Latest Actual Year]
+		RETURN
+		    CALCULATE ( [Net Income], REMOVEFILTERS ( DimYear ), DimYear[Year] = _y )
+	MEASURE _Measures[KPI Net Income Label] =
+		VAR _y = [Latest Actual Year]
+		VAR _g = CALCULATE ( [Net Income YoY %], REMOVEFILTERS ( DimYear ), DimYear[Year] = _y )
+		RETURN
+		    IF ( _g >= 0, "▲ ", "▼ " ) & FORMAT ( _g, "+0.0%;-0.0%" ) & " vs. FY" & ( _y - 1 )
+	MEASURE _Measures[KPI Operating Cash Flow] =
+		VAR _y = [Latest Actual Year]
+		RETURN
+		    CALCULATE ( [Operating Cash Flow], REMOVEFILTERS ( DimYear ), DimYear[Year] = _y )
+	MEASURE _Measures[KPI Operating Cash Flow Label] =
+		VAR _y = [Latest Actual Year]
+		RETURN
+		    FORMAT ( CALCULATE ( [Cash Conversion], REMOVEFILTERS ( DimYear ), DimYear[Year] = _y ), "0.00" ) & "x net income"
+	MEASURE _Measures[KPI Net Debt to Adj EBITDA] =
+		VAR _y = [Latest Actual Year]
+		RETURN
+		    CALCULATE ( [Net Debt to Adj EBITDA], REMOVEFILTERS ( DimYear ), DimYear[Year] = _y )
+	MEASURE _Measures[KPI Net Debt Label] = "Target range 1.0–2.0x"
+	// Latest-year contract backlog in C$ billions.
+	MEASURE _Measures[KPI Backlog] =
+		VAR _y = [Latest Actual Year]
+		RETURN
+		    CALCULATE ( DIVIDE ( [Backlog], 1000 ), REMOVEFILTERS ( DimYear ), DimYear[Year] = _y )
+	MEASURE _Measures[KPI Backlog Label] =
+		VAR _y = [Latest Actual Year]
+		VAR _g = CALCULATE ( [Backlog YoY %], REMOVEFILTERS ( DimYear ), DimYear[Year] = _y )
+		VAR _dso = CALCULATE ( [DSO Days], REMOVEFILTERS ( DimYear ), DimYear[Year] = _y )
+		RETURN
+		    IF ( _g >= 0, "▲ ", "▼ " ) & FORMAT ( _g, "+0.0%;-0.0%" ) & " · DSO " & FORMAT ( _dso, "0" ) & " days"
+	MEASURE _Measures[KPI DCF Upside Label] = IF ( [DCF Upside %] >= 0, "▲ ", "▼ " ) & FORMAT ( [DCF Upside %], "+0%;-0%" ) & " vs. share price"
+	MEASURE _Measures[KPI Comps Label] = "Peer median " & FORMAT ( [Peer Median EV/EBITDA], "0.0" ) & "x EV/EBITDA"
+	MEASURE _Measures[KPI Share Price Label] = "TSX: STN · October 2026"
+	// DCF enterprise value in C$ billions.
+	MEASURE _Measures[KPI Enterprise Value] = DIVIDE ( [Enterprise Value], 1000 )
+	MEASURE _Measures[KPI Enterprise Value Label] = "Terminal value " & FORMAT ( [Terminal Value % of EV], "0%" ) & " of EV"
+	MEASURE _Measures[KPI WACC Label] = "Cost of equity " & FORMAT ( [Cost of Equity], "0.0%" )
+	MEASURE _Measures[KPI Terminal Growth Label] = "Long-run growth after FY2030"
+
+// Check: FY2025 net revenue 6,494.8 (+10.7%), adjusted EBITDA margin 17.6%, cash conversion 1.80x,
+// FY2030E net revenue 9,188.9, DCF value per share $138.00, comps value per share $112.04.
+EVALUATE
+	SUMMARIZECOLUMNS (
+		DimYear[YearLabel],
+		"Net Revenue", [Net Revenue],
+		"Net Revenue YoY %", [Net Revenue YoY %],
+		"Adj EBITDA Margin %", [Adj EBITDA Margin %],
+		"Cash Conversion", [Cash Conversion],
+		"Unlevered FCF", [Unlevered FCF]
+	)
+EVALUATE
+	ROW (
+		"Latest Actual Year", [Latest Actual Year],
+		"KPI Net Revenue", [KPI Net Revenue Label],
+		"Net Revenue CAGR 2025-2030", [Net Revenue CAGR 2025-2030],
+		"DCF Value per Share", [DCF Value per Share],
+		"Comps Value per Share", [Comps Value per Share],
+		"DCF Upside %", [DCF Upside %]
+	)

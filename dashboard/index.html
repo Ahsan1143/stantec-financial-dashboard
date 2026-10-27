@@ -1,0 +1,523 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Stantec Financial Dashboard</title>
+<meta name="description" content="Stantec Inc. (TSX/NYSE: STN) FY2023–2025 results and FY2026–2030 forecast and DCF valuation. Web version of a Power BI dashboard by Muhammad Ahsan.">
+<style>
+:root {
+  color-scheme: light;
+  --page: #f6f6f3; --surface: #ffffff; --ink: #0b0b0b; --ink-2: #52514e; --muted: #898781;
+  --grid: #e8e7e1; --axis: #c3c2b7; --border: rgba(11,11,11,0.10);
+  --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --s1-light: #9ec5f4; --s1-wash: rgba(42,120,214,0.10);
+  --neutral: #b4b2a9; --good: #006300; --bad: #c62f2f; --band: rgba(27,175,122,0.10);
+  --seq1: #cde2fb; --seq7: #0d366b; --pill: #e8f1fc; --pill-ink: #1c5cab;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --page: #0d0d0d; --surface: #1a1a19; --ink: #f0efec; --ink-2: #c3c2b7; --muted: #898781;
+    --grid: #2c2c2a; --axis: #383835; --border: rgba(255,255,255,0.10);
+    --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s1-light: #184f95; --s1-wash: rgba(57,135,229,0.14);
+    --neutral: #5f5e5a; --good: #0ca30c; --bad: #e66767; --band: rgba(25,158,112,0.16);
+    --seq1: #1c2a3a; --seq7: #86b6ef; --pill: #14243a; --pill-ink: #86b6ef;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --page: #0d0d0d; --surface: #1a1a19; --ink: #f0efec; --ink-2: #c3c2b7; --muted: #898781;
+  --grid: #2c2c2a; --axis: #383835; --border: rgba(255,255,255,0.10);
+  --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s1-light: #184f95; --s1-wash: rgba(57,135,229,0.14);
+  --neutral: #5f5e5a; --good: #0ca30c; --bad: #e66767; --band: rgba(25,158,112,0.16);
+  --seq1: #1c2a3a; --seq7: #86b6ef; --pill: #14243a; --pill-ink: #86b6ef;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--page); color: var(--ink); font: 14px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, Inter, sans-serif; }
+.wrap { max-width: 1280px; margin: 0 auto; padding: 28px 24px 48px; }
+header { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+h1 { font-size: 24px; line-height: 1.2; margin: 0 0 4px; font-weight: 650; letter-spacing: -0.01em; }
+.sub { color: var(--ink-2); font-size: 13.5px; }
+.pill { display: inline-block; background: var(--pill); color: var(--pill-ink); font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 999px; }
+.tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin-bottom: 16px; overflow-x: auto; }
+.tabs button { font: inherit; font-weight: 600; font-size: 14px; color: var(--ink-2); background: none; border: none; padding: 10px 14px; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; white-space: nowrap; }
+.tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--s1); }
+.kpis { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 12px; margin-bottom: 16px; }
+.tile { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; }
+.tile .label { font-size: 12.5px; color: var(--ink-2); }
+.tile .value { font-size: 26px; font-weight: 650; margin-top: 4px; letter-spacing: -0.01em; }
+.tile .delta { font-size: 12.5px; margin-top: 2px; color: var(--ink-2); }
+.up { color: var(--good); font-weight: 600; } .down { color: var(--bad); font-weight: 600; }
+.grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-bottom: 16px; }
+.grid.g3 { grid-template-columns: 2fr 1fr; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px 12px; min-width: 0; }
+.card h2 { font-size: 15px; margin: 0; font-weight: 650; }
+.card .note { font-size: 12.5px; color: var(--ink-2); margin: 2px 0 8px; }
+.legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 12px; color: var(--ink-2); margin: 0 0 6px; }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; }
+.legend i.dot { border-radius: 50%; } .legend i.line { width: 14px; height: 2px; vertical-align: 3px; }
+.minis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.mini { border: 1px solid var(--grid); border-radius: 10px; padding: 10px 12px 4px; }
+.mini .t { font-size: 12.5px; color: var(--ink-2); }
+.mini .v { font-size: 20px; font-weight: 650; }
+.mini .d { font-size: 12px; color: var(--ink-2); }
+svg text { font-family: inherit; }
+.tick { font-size: 11px; fill: var(--muted); }
+.lbl { font-size: 11.5px; fill: var(--ink-2); }
+.val { font-size: 11.5px; fill: var(--ink); font-weight: 600; }
+.hit { fill: transparent; cursor: default; }
+#tip { position: fixed; pointer-events: none; background: var(--surface); color: var(--ink); border: 1px solid var(--border); box-shadow: 0 6px 24px rgba(0,0,0,0.12); border-radius: 8px; padding: 8px 10px; font-size: 12.5px; line-height: 1.4; opacity: 0; transition: opacity .12s; z-index: 10; max-width: 300px; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th, td { padding: 7px 6px; text-align: right; border-bottom: 1px solid var(--grid); white-space: nowrap; font-variant-numeric: tabular-nums; }
+th { font-size: 12px; color: var(--ink-2); font-weight: 600; }
+th:first-child, td:first-child { text-align: left; }
+.heat td { text-align: center; font-weight: 600; border: 2px solid var(--surface); border-radius: 4px; }
+.heat th { text-align: center; }
+.tablewrap { overflow-x: auto; }
+[hidden] { display: none !important; }
+footer { margin-top: 18px; font-size: 12px; color: var(--muted); line-height: 1.6; }
+footer a { color: var(--ink-2); }
+@media (max-width: 1100px) { .kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); } .minis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 760px) {
+  .wrap { padding: 18px 16px 36px; }
+  .grid, .grid.g3 { grid-template-columns: minmax(0, 1fr); }
+  .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .minis { grid-template-columns: minmax(0, 1fr); }
+  .tile .value { font-size: 22px; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Stantec Inc. (TSX/NYSE: STN) — Financial Performance</h1>
+      <div class="sub">FY2023–2025 results and FY2026–2030 forecast · C$ · Prepared by Muhammad Ahsan, October 2026</div>
+    </div>
+    <span class="pill">Web version of the Power BI dashboard</span>
+  </header>
+
+  <nav class="tabs" role="tablist">
+    <button role="tab" aria-selected="true" data-tab="perf">Performance 2023–2025</button>
+    <button role="tab" aria-selected="false" data-tab="fcst">Forecast &amp; valuation</button>
+  </nav>
+
+  <!-- ===================== PAGE 1 ===================== -->
+  <section id="perf">
+    <div class="kpis" id="kpiPerf"></div>
+    <div class="grid g3">
+      <div class="card">
+        <h2>Net revenue by region</h2>
+        <div class="note">C$ millions · net revenue = gross revenue less subconsultant and other direct costs</div>
+        <div class="legend" id="segLegend"></div>
+        <div id="cSeg"></div>
+      </div>
+      <div class="card">
+        <h2>Growth by region</h2>
+        <div class="note">Net revenue growth vs. prior year (organic + acquisitions)</div>
+        <div class="tablewrap"><table id="tSeg"></table></div>
+        <div class="note" style="margin-top:12px" id="segMix"></div>
+      </div>
+    </div>
+    <div class="card" style="margin-bottom:16px">
+      <h2>Margins</h2>
+      <div class="note">Percent of net revenue · FY2023 → FY2025</div>
+      <div class="minis" id="minis"></div>
+    </div>
+    <div class="grid">
+      <div class="card">
+        <h2>Cash conversion</h2>
+        <div class="note">Operating cash flow vs. net income, C$ millions</div>
+        <div class="legend"><span><i style="background:var(--s1)"></i>Operating cash flow</span><span><i style="background:var(--neutral)"></i>Net income</span></div>
+        <div id="cCash"></div>
+      </div>
+      <div class="card">
+        <h2>Leverage</h2>
+        <div class="note">Net debt to adjusted EBITDA (as reported); shaded band = management's 1.0–2.0x target range</div>
+        <div id="cLev"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== PAGE 2 ===================== -->
+  <section id="fcst" hidden>
+    <div class="kpis" id="kpiFcst"></div>
+    <div class="grid">
+      <div class="card">
+        <h2>Net revenue: actual and forecast</h2>
+        <div class="note" id="nrNote"></div>
+        <div class="legend"><span><i style="background:var(--s1)"></i>Actual</span><span><i style="background:var(--s1-light)"></i>Forecast (base case)</span></div>
+        <div id="cNR"></div>
+      </div>
+      <div class="card">
+        <h2>Unlevered free cash flow</h2>
+        <div class="note">C$ millions · forecast cash flow and its present value at the model's WACC</div>
+        <div class="legend"><span><i style="background:var(--s1)"></i>Unlevered FCF</span><span><i style="background:var(--neutral)"></i>Present value</span></div>
+        <div id="cFCF"></div>
+      </div>
+    </div>
+    <div class="grid">
+      <div class="card">
+        <h2>From enterprise value to value per share</h2>
+        <div class="note">C$ millions · DCF valued at Dec 31, 2025</div>
+        <div id="cBridge"></div>
+      </div>
+      <div class="card">
+        <h2>Valuation range vs. share price</h2>
+        <div class="note">C$ per share · bar = DCF value across WACC 7.5–10% and growth 2–3%; dots = point estimates</div>
+        <div id="cRange"></div>
+      </div>
+    </div>
+    <div class="grid">
+      <div class="card">
+        <h2>DCF sensitivity</h2>
+        <div class="note" id="sensNote">Value per share (C$) at each WACC and terminal growth rate</div>
+        <div class="tablewrap"><table class="heat" id="tSens"></table></div>
+      </div>
+      <div class="card">
+        <h2>Peer EV/EBITDA multiples</h2>
+        <div class="note">Comparable engineering and design firms · line = peer median</div>
+        <div id="cComps"></div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    Sources: FY2023–2025 statements and FY2026–2030 forecast from my Stantec forecast &amp; DCF model (inputs from Stantec's Q4/FY2025 results release, Feb 25, 2026, and 2024 Annual Report).
+    Regional net revenue, adjusted EBITDA, net debt to adjusted EBITDA, DSO and backlog as reported by Stantec (Q4/FY2025 release; Q4/FY2024 results presentation; 2023 MD&amp;A).
+    Forecast and valuation are my own estimates, not investment advice.
+  </footer>
+</div>
+<div id="tip" role="tooltip"></div>
+
+<script>
+const D = {"fact":[{"Year":2023,"Scenario":"Actual","GrossRevenue":6479.6,"SubconsultantExpenses":1413.4,"NetRevenue":5066.2,"DirectPayroll":2321.5,"ProjectMargin":2744.7,"AdminMarketing":1965.3,"DeprPropertyEquipment":59.9,"DeprLeaseAssets":121.7,"NetImpairment":0.3,"AmortIntangibles":102.0,"EBIT":495.5,"NetInterestExpense":93.0,"OtherIncome":5.2,"IncomeTaxes":91.2,"NetIncome":316.5,"OperatingCashFlow":520.0,"Capex":100.6,"Acquisitions":75.6,"DividendsPaid":84.9,"Cash":352.9,"Receivables":1323.8,"ContractAssets":712.6,"Payables":842.4,"ContractLiabilities":397.5,"TotalDebt":1098.2,"ShareholdersEquity":2451.1,"AdjEBITDA_Reported":831.0,"NetDebtToAdjEBITDA_Reported":1.0,"DSO_Reported":77.0,"Backlog":6305.9,"TaxOnEBIT":null,"NOPAT":null,"IncreaseInNWC":null,"UnleveredFCF":null,"DiscountFactor":null,"PV_UnleveredFCF":null},{"Year":2024,"Scenario":"Actual","GrossRevenue":7500.0,"SubconsultantExpenses":1633.4,"NetRevenue":5866.6,"DirectPayroll":2670.9,"ProjectMargin":3195.7,"AdminMarketing":2286.1,"DeprPropertyEquipment":67.7,"DeprLeaseAssets":127.1,"NetImpairment":34.9,"AmortIntangibles":123.8,"EBIT":556.1,"NetInterestExpense":104.4,"OtherIncome":13.6,"IncomeTaxes":103.8,"NetIncome":361.5,"OperatingCashFlow":603.1,"Capex":99.0,"Acquisitions":555.0,"DividendsPaid":94.0,"Cash":228.5,"Receivables":1323.8,"ContractAssets":840.5,"Payables":1018.7,"ContractLiabilities":502.4,"TotalDebt":1383.5,"ShareholdersEquity":2945.1,"AdjEBITDA_Reported":980.3,"NetDebtToAdjEBITDA_Reported":1.2,"DSO_Reported":77.0,"Backlog":7823.9,"TaxOnEBIT":null,"NOPAT":null,"IncreaseInNWC":null,"UnleveredFCF":null,"DiscountFactor":null,"PV_UnleveredFCF":null},{"Year":2025,"Scenario":"Actual","GrossRevenue":8144.2,"SubconsultantExpenses":1649.4,"NetRevenue":6494.8,"DirectPayroll":2965.8,"ProjectMargin":3529.0,"AdminMarketing":2457.5,"DeprPropertyEquipment":70.6,"DeprLeaseAssets":133.6,"NetImpairment":6.0,"AmortIntangibles":147.5,"EBIT":713.8,"NetInterestExpense":102.0,"OtherIncome":18.2,"IncomeTaxes":150.6,"NetIncome":479.4,"OperatingCashFlow":862.9,"Capex":71.9,"Acquisitions":454.0,"DividendsPaid":101.0,"Cash":398.1,"Receivables":1306.5,"ContractAssets":872.8,"Payables":1125.3,"ContractLiabilities":581.7,"TotalDebt":1818.3,"ShareholdersEquity":3240.4,"AdjEBITDA_Reported":1143.7,"NetDebtToAdjEBITDA_Reported":1.3,"DSO_Reported":69.0,"Backlog":8570.2,"TaxOnEBIT":null,"NOPAT":null,"IncreaseInNWC":null,"UnleveredFCF":null,"DiscountFactor":null,"PV_UnleveredFCF":null},{"Year":2026,"Scenario":"Forecast","GrossRevenue":null,"SubconsultantExpenses":null,"NetRevenue":7144.28,"DirectPayroll":3264.94,"ProjectMargin":3879.34,"AdminMarketing":2679.1,"DeprPropertyEquipment":78.59,"DeprLeaseAssets":142.89,"NetImpairment":0.0,"AmortIntangibles":164.32,"EBIT":814.45,"NetInterestExpense":null,"OtherIncome":null,"IncomeTaxes":null,"NetIncome":null,"OperatingCashFlow":null,"Capex":114.31,"Acquisitions":null,"DividendsPaid":null,"Cash":null,"Receivables":null,"ContractAssets":null,"Payables":null,"ContractLiabilities":null,"TotalDebt":null,"ShareholdersEquity":null,"AdjEBITDA_Reported":null,"NetDebtToAdjEBITDA_Reported":null,"DSO_Reported":null,"Backlog":null,"TaxOnEBIT":195.47,"NOPAT":618.98,"IncreaseInNWC":47.23,"UnleveredFCF":700.35,"DiscountFactor":0.93,"PV_UnleveredFCF":652.54},{"Year":2027,"Scenario":"Forecast","GrossRevenue":null,"SubconsultantExpenses":null,"NetRevenue":7715.82,"DirectPayroll":3526.13,"ProjectMargin":4189.69,"AdminMarketing":2893.43,"DeprPropertyEquipment":84.87,"DeprLeaseAssets":154.32,"NetImpairment":0.0,"AmortIntangibles":177.46,"EBIT":879.6,"NetInterestExpense":null,"OtherIncome":null,"IncomeTaxes":null,"NetIncome":null,"OperatingCashFlow":null,"Capex":123.45,"Acquisitions":null,"DividendsPaid":null,"Cash":null,"Receivables":null,"ContractAssets":null,"Payables":null,"ContractLiabilities":null,"TotalDebt":null,"ShareholdersEquity":null,"AdjEBITDA_Reported":null,"NetDebtToAdjEBITDA_Reported":null,"DSO_Reported":null,"Backlog":null,"TaxOnEBIT":211.1,"NOPAT":668.5,"IncreaseInNWC":41.56,"UnleveredFCF":765.82,"DiscountFactor":0.87,"PV_UnleveredFCF":664.84},{"Year":2028,"Scenario":"Forecast","GrossRevenue":null,"SubconsultantExpenses":null,"NetRevenue":8255.93,"DirectPayroll":3772.96,"ProjectMargin":4482.97,"AdminMarketing":3095.97,"DeprPropertyEquipment":90.82,"DeprLeaseAssets":165.12,"NetImpairment":0.0,"AmortIntangibles":189.89,"EBIT":941.18,"NetInterestExpense":null,"OtherIncome":null,"IncomeTaxes":null,"NetIncome":null,"OperatingCashFlow":null,"Capex":132.09,"Acquisitions":null,"DividendsPaid":null,"Cash":null,"Receivables":null,"ContractAssets":null,"Payables":null,"ContractLiabilities":null,"TotalDebt":null,"ShareholdersEquity":null,"AdjEBITDA_Reported":null,"NetDebtToAdjEBITDA_Reported":null,"DSO_Reported":null,"Backlog":null,"TaxOnEBIT":225.88,"NOPAT":715.29,"IncreaseInNWC":39.28,"UnleveredFCF":824.62,"DiscountFactor":0.81,"PV_UnleveredFCF":667.02},{"Year":2029,"Scenario":"Forecast","GrossRevenue":null,"SubconsultantExpenses":null,"NetRevenue":8751.29,"DirectPayroll":3999.34,"ProjectMargin":4751.95,"AdminMarketing":3281.73,"DeprPropertyEquipment":96.26,"DeprLeaseAssets":175.03,"NetImpairment":0.0,"AmortIntangibles":201.28,"EBIT":997.65,"NetInterestExpense":null,"OtherIncome":null,"IncomeTaxes":null,"NetIncome":null,"OperatingCashFlow":null,"Capex":140.02,"Acquisitions":null,"DividendsPaid":null,"Cash":null,"Receivables":null,"ContractAssets":null,"Payables":null,"ContractLiabilities":null,"TotalDebt":null,"ShareholdersEquity":null,"AdjEBITDA_Reported":null,"NetDebtToAdjEBITDA_Reported":null,"DSO_Reported":null,"Backlog":null,"TaxOnEBIT":239.44,"NOPAT":758.21,"IncreaseInNWC":36.02,"UnleveredFCF":879.71,"DiscountFactor":0.75,"PV_UnleveredFCF":663.01},{"Year":2030,"Scenario":"Forecast","GrossRevenue":null,"SubconsultantExpenses":null,"NetRevenue":9188.85,"DirectPayroll":4199.3,"ProjectMargin":4989.55,"AdminMarketing":3445.82,"DeprPropertyEquipment":101.08,"DeprLeaseAssets":183.78,"NetImpairment":0.0,"AmortIntangibles":211.34,"EBIT":1047.53,"NetInterestExpense":null,"OtherIncome":null,"IncomeTaxes":null,"NetIncome":null,"OperatingCashFlow":null,"Capex":147.02,"Acquisitions":null,"DividendsPaid":null,"Cash":null,"Receivables":null,"ContractAssets":null,"Payables":null,"ContractLiabilities":null,"TotalDebt":null,"ShareholdersEquity":null,"AdjEBITDA_Reported":null,"NetDebtToAdjEBITDA_Reported":null,"DSO_Reported":null,"Backlog":null,"TaxOnEBIT":251.41,"NOPAT":796.12,"IncreaseInNWC":31.82,"UnleveredFCF":929.7,"DiscountFactor":0.7,"PV_UnleveredFCF":652.85}],"segments":[{"Year":2023,"Segment":"Canada","NetRevenue":1246.3},{"Year":2023,"Segment":"United States","NetRevenue":2684.1},{"Year":2023,"Segment":"Global","NetRevenue":1135.8},{"Year":2024,"Segment":"Canada","NetRevenue":1427.0},{"Year":2024,"Segment":"United States","NetRevenue":3040.7},{"Year":2024,"Segment":"Global","NetRevenue":1398.9},{"Year":2025,"Segment":"Canada","NetRevenue":1546.5},{"Year":2025,"Segment":"United States","NetRevenue":3369.4},{"Year":2025,"Segment":"Global","NetRevenue":1578.9}],"valuation":{"WACC":0.073261746192021,"Cost of equity":0.0791,"Terminal growth":0.025,"Sum of PV of free cash flows":3300.25984668518,"Terminal value (2030)":19745.3332684523,"PV of terminal value":13865.5217678729,"Enterprise value":17165.781614558,"Debt (excl. leases)":1818.3,"Cash":398.1,"Equity value":15745.581614558,"Diluted shares (millions)":114.1,"DCF value per share":137.998086017161,"Share price":96.25,"DCF upside":0.433746348230242,"Terminal value % of EV":0.807741941451342,"Peer median EV/EBITDA":13.79,"Stantec EV/EBITDA":11.56,"Comps value per share":112.03768624014},"sensitivity":[{"WACC":0.075,"TerminalGrowth":0.02,"ValuePerShare":121.59},{"WACC":0.075,"TerminalGrowth":0.025,"ValuePerShare":132.69},{"WACC":0.075,"TerminalGrowth":0.03,"ValuePerShare":146.25},{"WACC":0.08,"TerminalGrowth":0.02,"ValuePerShare":110.21},{"WACC":0.08,"TerminalGrowth":0.025,"ValuePerShare":119.29},{"WACC":0.08,"TerminalGrowth":0.03,"ValuePerShare":130.18},{"WACC":0.085,"TerminalGrowth":0.02,"ValuePerShare":100.59},{"WACC":0.085,"TerminalGrowth":0.025,"ValuePerShare":108.12},{"WACC":0.085,"TerminalGrowth":0.03,"ValuePerShare":117.03},{"WACC":0.09,"TerminalGrowth":0.02,"ValuePerShare":92.34},{"WACC":0.09,"TerminalGrowth":0.025,"ValuePerShare":98.68},{"WACC":0.09,"TerminalGrowth":0.03,"ValuePerShare":106.08},{"WACC":0.095,"TerminalGrowth":0.02,"ValuePerShare":85.19},{"WACC":0.095,"TerminalGrowth":0.025,"ValuePerShare":90.59},{"WACC":0.095,"TerminalGrowth":0.03,"ValuePerShare":96.82},{"WACC":0.1,"TerminalGrowth":0.02,"ValuePerShare":78.94},{"WACC":0.1,"TerminalGrowth":0.025,"ValuePerShare":83.58},{"WACC":0.1,"TerminalGrowth":0.03,"ValuePerShare":88.88}],"comps":[{"Company":"WSP Global","Ticker":"WSP (TSX)","EV_EBITDA":13.52},{"Company":"AECOM","Ticker":"ACM (NYSE)","EV_EBITDA":10.87},{"Company":"Tetra Tech","Ticker":"TTEK (NASDAQ)","EV_EBITDA":14.06},{"Company":"Jacobs","Ticker":"J (NYSE)","EV_EBITDA":21.45},{"Company":"Stantec","Ticker":"STN","EV_EBITDA":11.56}]};
+const $ = (s) => document.querySelector(s);
+const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const NS = "http://www.w3.org/2000/svg";
+const F = Object.fromEntries(D.fact.map((r) => [r.Year, r]));
+const V = D.valuation;
+const SEGS = ["United States", "Canada", "Global"];
+const SEGCOL = { "United States": "--s1", "Canada": "--s2", "Global": "--s3" };
+
+/* ---------- formatting ---------- */
+const mm = (v, d = 0) => `$${v.toLocaleString("en-CA", { minimumFractionDigits: d, maximumFractionDigits: d })}M`;
+const bn = (v, d = 2) => `$${(v / 1000).toFixed(d)}B`;
+const pct = (v, d = 1) => `${(v * 100).toFixed(d)}%`;
+const sgn = (v, d = 1) => `${v >= 0 ? "+" : "−"}${Math.abs(v * 100).toFixed(d)}%`;
+const pts = (v) => `${v >= 0 ? "+" : "−"}${Math.abs(v * 100).toFixed(1)} pts`;
+const cad = (v) => `$${v.toFixed(2)}`;
+const axisMoney = (v) => (v === 0 ? "$0" : v >= 1000 ? `$${(v / 1000).toFixed(v % 1000 ? 1 : 0)}B` : `$${v}M`);
+
+/* ---------- tooltip ---------- */
+const tip = $("#tip");
+function showTip(e, html) {
+  tip.innerHTML = html; tip.style.opacity = 1;
+  const r = tip.getBoundingClientRect(); let x = e.clientX + 14, y = e.clientY + 14;
+  if (x + r.width > innerWidth - 8) x = e.clientX - r.width - 14;
+  if (y + r.height > innerHeight - 8) y = e.clientY - r.height - 14;
+  tip.style.left = x + "px"; tip.style.top = y + "px";
+}
+const hideTip = () => (tip.style.opacity = 0);
+function hover(node, html) { node.addEventListener("mousemove", (e) => showTip(e, html)); node.addEventListener("mouseleave", hideTip); }
+
+/* ---------- svg helpers ---------- */
+function el(tag, attrs = {}, parent) { const n = document.createElementNS(NS, tag); for (const k in attrs) n.setAttribute(k, attrs[k]); if (parent) parent.appendChild(n); return n; }
+function txt(p, x, y, s, cls, anchor = "start", extra = {}) { const t = el("text", { x, y, class: cls, "text-anchor": anchor, "dominant-baseline": "middle", ...extra }, p); t.textContent = s; return t; }
+function svgFor(c, h) { c.innerHTML = ""; const w = Math.max(c.clientWidth, 200); return [el("svg", { width: w, height: h, viewBox: `0 0 ${w} ${h}` }, c), w]; }
+function niceTicks(min, max, n = 5) {
+  const span = max - min || 1, s0 = span / n, mag = 10 ** Math.floor(Math.log10(s0));
+  const step = [1, 2, 2.5, 5, 10].map((m) => m * mag).find((s) => s >= s0);
+  const out = []; for (let v = Math.ceil(min / step) * step; v <= max + 1e-9; v += step) out.push(+v.toFixed(10)); return out;
+}
+/* column with 4px rounded top, square at baseline */
+function colPath(x, y0, y1, w, roundTop = true) {
+  const h = y0 - y1; if (h < 0.5) return "";
+  const r = roundTop ? Math.min(4, w / 2, h) : 0;
+  return `M${x},${y0}V${y1 + r}Q${x},${y1} ${x + r},${y1}H${x + w - r}Q${x + w},${y1} ${x + w},${y1 + r}V${y0}Z`;
+}
+function frame(s, w, H, m, ymax, fmt, ymin = 0) {
+  const y = (v) => m.t + (1 - (v - ymin) / (ymax - ymin)) * (H - m.t - m.b);
+  niceTicks(ymin, ymax, 4).forEach((t) => { el("line", { x1: m.l, x2: w - m.r, y1: y(t), y2: y(t), stroke: css("--grid") }, s); txt(s, m.l - 8, y(t), fmt(t), "tick", "end"); });
+  el("line", { x1: m.l, x2: w - m.r, y1: y(ymin), y2: y(ymin), stroke: css("--axis") }, s);
+  return y;
+}
+
+/* ---------- KPI tiles ---------- */
+function tiles(id, list) {
+  $(id).innerHTML = list.map(([l, v, d]) => `<div class="tile"><div class="label">${l}</div><div class="value">${v}</div><div class="delta">${d}</div></div>`).join("");
+}
+const yoy = (k, y = 2025) => F[y][k] / F[y - 1][k] - 1;
+const arrow = (v, good = true) => `<span class="${(v >= 0) === good ? "up" : "down"}">${v >= 0 ? "▲" : "▼"} `;
+
+function renderPerfKpis() {
+  const m25 = F[2025].AdjEBITDA_Reported / F[2025].NetRevenue, m24 = F[2024].AdjEBITDA_Reported / F[2024].NetRevenue;
+  tiles("#kpiPerf", [
+    ["FY2025 net revenue", bn(F[2025].NetRevenue), `${arrow(yoy("NetRevenue"))}${sgn(yoy("NetRevenue"))}</span> vs. FY2024`],
+    ["Adjusted EBITDA margin", pct(m25), `${arrow(m25 - m24)}${pts(m25 - m24)}</span> vs. FY2024`],
+    ["Net income", mm(F[2025].NetIncome), `${arrow(yoy("NetIncome"))}${sgn(yoy("NetIncome"))}</span> vs. FY2024`],
+    ["Operating cash flow", mm(F[2025].OperatingCashFlow), `${(F[2025].OperatingCashFlow / F[2025].NetIncome).toFixed(2)}x net income`],
+    ["Net debt / adj. EBITDA", `${F[2025].NetDebtToAdjEBITDA_Reported.toFixed(1)}x`, "Target range 1.0–2.0x"],
+    ["Contract backlog", bn(F[2025].Backlog), `${arrow(yoy("Backlog"))}${sgn(yoy("Backlog"))}</span> · DSO ${F[2025].DSO_Reported} days`],
+  ]);
+}
+
+/* ---------- stacked columns: region ---------- */
+function renderSeg() {
+  $("#segLegend").innerHTML = SEGS.map((s) => `<span><i style="background:var(${SEGCOL[s]})"></i>${s}</span>`).join("");
+  const years = [2023, 2024, 2025], H = 310, m = { t: 22, r: 110, b: 28, l: 56 };
+  const [s, w] = svgFor($("#cSeg"), H);
+  const y = frame(s, w, H, m, 7000, axisMoney);
+  const band = (w - m.l - m.r) / years.length, bw = Math.min(64, band * 0.5);
+  years.forEach((yr, i) => {
+    const x = m.l + band * i + (band - bw) / 2; let base = 0;
+    SEGS.forEach((seg, k) => {
+      const v = D.segments.find((d) => d.Year === yr && d.Segment === seg).NetRevenue;
+      const top = k === SEGS.length - 1;
+      const p = el("path", { d: colPath(x, y(base) - (k ? 1 : 0), y(base + v) + 1, bw, top), fill: css(SEGCOL[seg]) }, s);
+      hover(p, `<b>FY${yr} · ${seg}</b><br>Net revenue ${mm(v, 1)}<br>${pct(v / F[yr].NetRevenue)} of total`);
+      if (i === years.length - 1) txt(s, x + bw + 10, y(base + v / 2), `${seg} ${pct(v / F[yr].NetRevenue, 0)}`, "lbl");
+      base += v;
+    });
+    txt(s, x + bw / 2, y(base) - 11, bn(base), "val", "middle");
+    txt(s, x + bw / 2, H - 12, `FY${yr}`, "tick", "middle");
+  });
+}
+function renderSegTable() {
+  const rows = SEGS.map((seg) => {
+    const g = (yr) => D.segments.find((d) => d.Year === yr && d.Segment === seg).NetRevenue;
+    return [seg, g(2025), g(2024) / g(2023) - 1, g(2025) / g(2024) - 1];
+  });
+  rows.push(["Total", F[2025].NetRevenue, yoy("NetRevenue", 2024), yoy("NetRevenue")]);
+  $("#tSeg").innerHTML = `<thead><tr><th>Region</th><th>FY2025 $M</th><th>FY24 growth</th><th>FY25 growth</th></tr></thead><tbody>` +
+    rows.map((r, i) => `<tr style="${i === rows.length - 1 ? "font-weight:650" : ""}"><td>${r[0]}</td><td>${Math.round(r[1]).toLocaleString("en-CA")}</td><td>${sgn(r[2])}</td><td>${sgn(r[3])}</td></tr>`).join("") + `</tbody>`;
+  const us = rows[0][1] / F[2025].NetRevenue;
+  $("#segMix").textContent = `The United States is ${pct(us, 0)} of net revenue, so US infrastructure spending and the USD/CAD rate drive results. Global grew fastest in FY2025.`;
+}
+
+/* ---------- margin small multiples ---------- */
+function renderMinis() {
+  const defs = [
+    ["Project margin", (r) => r.ProjectMargin / r.NetRevenue, "Revenue left after direct payroll"],
+    ["Adjusted EBITDA margin", (r) => r.AdjEBITDA_Reported / r.NetRevenue, "As reported by Stantec"],
+    ["EBIT margin", (r) => r.EBIT / r.NetRevenue, "Operating profit"],
+    ["Net income margin", (r) => r.NetIncome / r.NetRevenue, "After interest and tax"],
+  ];
+  const box = $("#minis"); box.innerHTML = "";
+  defs.forEach(([name, fn, sub]) => {
+    const vals = [2023, 2024, 2025].map((yr) => fn(F[yr])), d = vals[2] - vals[0];
+    const div = document.createElement("div"); div.className = "mini";
+    div.innerHTML = `<div class="t">${name}</div><div class="v">${pct(vals[2])}</div><div class="d">${pts(d)} since FY2023 · ${sub}</div><div class="spark"></div>`;
+    box.appendChild(div);
+    const H = 84, m = { t: 16, r: 30, b: 20, l: 30 };
+    const [s, w] = svgFor(div.querySelector(".spark"), H);
+    const lo = Math.min(...vals), hi = Math.max(...vals), pad = Math.max((hi - lo) * 0.6, 0.004);
+    const y = (v) => m.t + (1 - (v - (lo - pad)) / (hi + pad - (lo - pad))) * (H - m.t - m.b);
+    const x = (i) => m.l + (i / 2) * (w - m.l - m.r);
+    el("line", { x1: m.l, x2: w - m.r, y1: H - m.b, y2: H - m.b, stroke: css("--axis") }, s);
+    el("path", { d: vals.map((v, i) => `${i ? "L" : "M"}${x(i)},${y(v)}`).join(""), fill: "none", stroke: css("--s1"), "stroke-width": 2, "stroke-linejoin": "round" }, s);
+    vals.forEach((v, i) => {
+      const c = el("circle", { cx: x(i), cy: y(v), r: 4, fill: css("--s1"), stroke: css("--surface"), "stroke-width": 2 }, s);
+      txt(s, x(i), y(v) - 11, pct(v), i === 2 ? "val" : "lbl", "middle");
+      txt(s, x(i), H - 8, `FY${2023 + i}`, "tick", "middle");
+      const hit = el("rect", { x: x(i) - 24, y: 0, width: 48, height: H, class: "hit" }, s);
+      hover(hit, `<b>${name} · FY${2023 + i}</b><br>${pct(v, 2)}`);
+    });
+  });
+}
+
+/* ---------- grouped columns ---------- */
+function grouped(id, cats, series, { H = 280, fmt = axisMoney, ymax, labelFirst = true, catLabels } = {}) {
+  const m = { t: 22, r: 12, b: 28, l: 56 };
+  const [s, w] = svgFor($(id), H);
+  const max = ymax || Math.max(...series.flatMap((se) => se.values)) * 1.15;
+  const y = frame(s, w, H, m, max, fmt);
+  const band = (w - m.l - m.r) / cats.length, bw = Math.min(26, (band * 0.7) / series.length), gap = 2;
+  const groupW = bw * series.length + gap * (series.length - 1);
+  cats.forEach((c, i) => {
+    const x0 = m.l + band * i + (band - groupW) / 2;
+    series.forEach((se, k) => {
+      const v = se.values[i], x = x0 + k * (bw + gap);
+      const p = el("path", { d: colPath(x, y(0), y(v), bw), fill: css(se.color) }, s);
+      hover(p, `<b>${catLabels ? catLabels[i] : c}</b><br>${series.map((q) => `${q.name}: ${mm(q.values[i], 1)}`).join("<br>")}${se.extra ? "<br>" + se.extra(i) : ""}`);
+      if (k === 0 && labelFirst) txt(s, x + bw / 2, y(v) - 10, se.label ? se.label(i) : mm(v), "val", "middle");
+    });
+    txt(s, m.l + band * i + band / 2, H - 12, catLabels ? catLabels[i] : c, "tick", "middle");
+  });
+}
+
+/* ---------- leverage columns with target band ---------- */
+function renderLev() {
+  const years = [2023, 2024, 2025], H = 280, m = { t: 22, r: 12, b: 28, l: 44 };
+  const [s, w] = svgFor($("#cLev"), H);
+  const y = (v) => m.t + (1 - v / 2.5) * (H - m.t - m.b);
+  el("rect", { x: m.l, width: w - m.l - m.r, y: y(2.0), height: y(1.0) - y(2.0), fill: css("--band") }, s);
+  [0, 0.5, 1, 1.5, 2, 2.5].forEach((t) => { el("line", { x1: m.l, x2: w - m.r, y1: y(t), y2: y(t), stroke: css("--grid") }, s); txt(s, m.l - 8, y(t), `${t.toFixed(1)}x`, "tick", "end"); });
+  el("line", { x1: m.l, x2: w - m.r, y1: y(0), y2: y(0), stroke: css("--axis") }, s);
+  txt(s, w - m.r - 6, y(2.0) + 12, "Target range", "lbl", "end");
+  const band = (w - m.l - m.r) / 3, bw = Math.min(56, band * 0.45);
+  years.forEach((yr, i) => {
+    const r = F[yr], v = r.NetDebtToAdjEBITDA_Reported, x = m.l + band * i + (band - bw) / 2;
+    const p = el("path", { d: colPath(x, y(0), y(v), bw), fill: css("--s1") }, s);
+    hover(p, `<b>FY${yr}</b><br>Net debt / adj. EBITDA ${v.toFixed(1)}x<br>Net debt (debt − cash, excl. leases) ${mm(r.TotalDebt - r.Cash, 1)}<br>DSO ${r.DSO_Reported} days`);
+    txt(s, x + bw / 2, y(v) - 10, `${v.toFixed(1)}x`, "val", "middle");
+    txt(s, x + bw / 2, H - 12, `FY${yr}`, "tick", "middle");
+  });
+}
+
+/* ---------- page 2 ---------- */
+function renderFcstKpis() {
+  const up = V["DCF upside"];
+  tiles("#kpiFcst", [
+    ["DCF value per share", cad(V["DCF value per share"]), `${arrow(up)}${sgn(up, 0)}</span> vs. share price`],
+    ["Comps value per share", cad(V["Comps value per share"]), `Peer median ${V["Peer median EV/EBITDA"].toFixed(1)}x EV/EBITDA`],
+    ["Share price (Oct 2026)", cad(V["Share price"]), "TSX: STN"],
+    ["Enterprise value (DCF)", bn(V["Enterprise value"], 1), `Terminal value ${pct(V["Terminal value % of EV"], 0)} of EV`],
+    ["WACC", pct(V["WACC"]), `Cost of equity ${pct(V["Cost of equity"])}`],
+    ["Terminal growth", pct(V["Terminal growth"]), "After FY2030"],
+  ]);
+}
+function renderNR() {
+  const years = D.fact.map((r) => r.Year), H = 290, m = { t: 22, r: 12, b: 28, l: 56 };
+  const [s, w] = svgFor($("#cNR"), H);
+  const y = frame(s, w, H, m, 10000, axisMoney);
+  const band = (w - m.l - m.r) / years.length, bw = Math.min(30, band * 0.6);
+  const cagr = (F[2030].NetRevenue / F[2025].NetRevenue) ** (1 / 5) - 1;
+  $("#nrNote").textContent = `C$ millions · forecast compounds at ${pct(cagr)} a year from FY2025 to FY2030 (growth fades from 10% to 5%)`;
+  D.fact.forEach((r, i) => {
+    const x = m.l + band * i + (band - bw) / 2, act = r.Scenario === "Actual";
+    const p = el("path", { d: colPath(x, y(0), y(r.NetRevenue), bw), fill: css(act ? "--s1" : "--s1-light") }, s);
+    const g = i ? r.NetRevenue / D.fact[i - 1].NetRevenue - 1 : null;
+    hover(p, `<b>FY${r.Year}${act ? " actual" : " forecast"}</b><br>Net revenue ${mm(r.NetRevenue, 1)}${g !== null ? `<br>Growth ${sgn(g)}` : ""}<br>EBIT ${mm(r.EBIT, 1)} (${pct(r.EBIT / r.NetRevenue)} margin)`);
+    if (r.Year === 2023 || r.Year === 2025 || r.Year === 2030) txt(s, x + bw / 2, y(r.NetRevenue) - 10, bn(r.NetRevenue, 1), "val", "middle");
+    txt(s, x + bw / 2, H - 12, `${String(r.Year).slice(2)}${act ? "A" : "E"}`, "tick", "middle");
+  });
+  const xd = m.l + band * 3;
+  el("line", { x1: xd, x2: xd, y1: m.t - 6, y2: H - m.b, stroke: css("--axis") }, s);
+  txt(s, xd + 6, m.t - 4, "Forecast →", "lbl");
+}
+function renderFCF() {
+  const fc = D.fact.filter((r) => r.Scenario === "Forecast");
+  grouped("#cFCF", fc.map((r) => r.Year), [
+    { name: "Unlevered FCF", color: "--s1", values: fc.map((r) => r.UnleveredFCF), extra: (i) => `Discount factor ${fc[i].DiscountFactor.toFixed(3)}` },
+    { name: "Present value", color: "--neutral", values: fc.map((r) => r.PV_UnleveredFCF) },
+  ], { H: 290, catLabels: fc.map((r) => `FY${r.Year}E`), ymax: 1000 });
+}
+function renderBridge() {
+  const steps = [
+    ["PV of FCF 2026–30", V["Sum of PV of free cash flows"], "add"],
+    ["PV of terminal value", V["PV of terminal value"], "add"],
+    ["Enterprise value", V["Enterprise value"], "total"],
+    ["Less: debt", -V["Debt (excl. leases)"], "add"],
+    ["Plus: cash", V["Cash"], "add"],
+    ["Equity value", V["Equity value"], "total"],
+  ];
+  const H = 300, m = { t: 26, r: 12, b: 40, l: 56 };
+  const [s, w] = svgFor($("#cBridge"), H);
+  const y = frame(s, w, H, m, 20000, axisMoney);
+  const band = (w - m.l - m.r) / steps.length, bw = Math.min(56, band * 0.55);
+  let run = 0;
+  steps.forEach(([name, v, kind], i) => {
+    const x = m.l + band * i + (band - bw) / 2;
+    let a, b, col;
+    if (kind === "total") { a = 0; b = v; run = v; col = "--s1"; }
+    else { a = run; b = run + v; run = b; col = v >= 0 ? "--s3" : "--s2"; }
+    const lo = Math.min(a, b), hi = Math.max(a, b);
+    const p = el("path", { d: colPath(x, y(lo), y(hi), bw, kind === "total" || v >= 0), fill: css(col) }, s);
+    hover(p, `<b>${name}</b><br>${v < 0 ? "−" : ""}${mm(Math.abs(v), 1)}`);
+    txt(s, x + bw / 2, y(hi) - 10, `${v < 0 ? "−" : ""}${bn(Math.abs(v), 1)}`, "val", "middle");
+    const words = name.split(" "), half = Math.ceil(words.length / 2);
+    txt(s, x + bw / 2, H - 26, words.slice(0, half).join(" "), "tick", "middle");
+    txt(s, x + bw / 2, H - 12, words.slice(half).join(" "), "tick", "middle");
+    if (i < steps.length - 1) el("line", { x1: x + bw, x2: x + band, y1: y(run), y2: y(run), stroke: css("--axis") }, s);
+  });
+  const per = V["Equity value"] / V["Diluted shares (millions)"];
+  txt(s, w - m.r, m.t - 12, `÷ ${V["Diluted shares (millions)"].toFixed(1)}M diluted shares = ${cad(per)} per share`, "lbl", "end");
+}
+function renderRange() {
+  const sens = D.sensitivity.map((r) => r.ValuePerShare);
+  const rows = [
+    ["DCF sensitivity range", Math.min(...sens), Math.max(...sens), V["DCF value per share"], "--s1"],
+    ["Peer EV/EBITDA comps", V["Comps value per share"], V["Comps value per share"], V["Comps value per share"], "--s1"],
+  ];
+  const H = 230, m = { t: 52, r: 30, b: 30, l: 16 };
+  const [s, w] = svgFor($("#cRange"), H);
+  const x = (v) => m.l + ((v - 60) / (160 - 60)) * (w - m.l - m.r);
+  [60, 80, 100, 120, 140, 160].forEach((t) => { el("line", { x1: x(t), x2: x(t), y1: m.t, y2: H - m.b, stroke: css("--grid") }, s); txt(s, x(t), H - 14, `$${t}`, "tick", "middle"); });
+  rows.forEach(([name, lo, hi, pt, col], i) => {
+    const yy = m.t + 26 + i * 64;
+    txt(s, m.l, yy - 18, name, "lbl");
+    if (hi > lo) {
+      const bar = el("rect", { x: x(lo), y: yy - 6, width: x(hi) - x(lo), height: 12, rx: 4, fill: css("--s1-light") }, s);
+      hover(bar, `<b>${name}</b><br>Low ${cad(lo)} · High ${cad(hi)}<br>Base case ${cad(pt)}`);
+      txt(s, x(lo) - 6, yy, cad(lo), "lbl", "end"); txt(s, x(hi) + 6, yy, cad(hi), "lbl", "start");
+    }
+    const c = el("circle", { cx: x(pt), cy: yy, r: 6, fill: css(col), stroke: css("--surface"), "stroke-width": 2 }, s);
+    hover(c, `<b>${name}</b><br>Point estimate ${cad(pt)}`);
+    txt(s, x(pt), yy + 18, cad(pt), "val", "middle");
+  });
+  const px = x(V["Share price"]);
+  el("line", { x1: px, x2: px, y1: m.t - 18, y2: H - m.b, stroke: css("--s2"), "stroke-width": 2 }, s);
+  txt(s, px, m.t - 30, `Share price ${cad(V["Share price"])}`, "val", "middle");
+}
+function renderSens() {
+  const ws = [...new Set(D.sensitivity.map((r) => r.WACC))], gs = [...new Set(D.sensitivity.map((r) => r.TerminalGrowth))];
+  const vals = D.sensitivity.map((r) => r.ValuePerShare), lo = Math.min(...vals), hi = Math.max(...vals);
+  const mix = (a, b, t) => { const h = (c) => [1, 3, 5].map((i) => parseInt(c.slice(i, i + 2), 16)); const A = h(a), B = h(b); return `rgb(${A.map((v, i) => Math.round(v + (B[i] - v) * t)).join(",")})`; };
+  const c1 = css("--seq1"), c7 = css("--seq7");
+  const baseW = ws.reduce((a, b) => (Math.abs(b - V["WACC"]) < Math.abs(a - V["WACC"]) ? b : a));
+  let html = `<thead><tr><th style="text-align:left">WACC \\ growth</th>${gs.map((g) => `<th>${pct(g)}</th>`).join("")}</tr></thead><tbody>`;
+  ws.forEach((wv) => {
+    html += `<tr><th style="text-align:left">${pct(wv)}</th>` + gs.map((g) => {
+      const v = D.sensitivity.find((r) => r.WACC === wv && r.TerminalGrowth === g).ValuePerShare, t = (v - lo) / (hi - lo);
+      const base = wv === baseW && g === V["Terminal growth"];
+      return `<td style="background:${mix(c1, c7, t)};color:${t > 0.55 ? "#fff" : css("--ink")};${base ? `outline:2px solid ${css("--s2")};outline-offset:-2px` : ""}" title="WACC ${pct(wv)}, g ${pct(g)}: ${cad(v)}">${cad(v)}</td>`;
+    }).join("") + `</tr>`;
+  });
+  $("#tSens").innerHTML = html + `</tbody>`;
+  $("#sensNote").textContent = `Value per share (C$) at each WACC and terminal growth rate · outlined cell is nearest the base case (WACC ${pct(V["WACC"])}, g ${pct(V["Terminal growth"])} → ${cad(V["DCF value per share"])})`;
+}
+function renderComps() {
+  const rows = [...D.comps].sort((a, b) => b.EV_EBITDA - a.EV_EBITDA), H = 30 * rows.length + 58, m = { l: 110, r: 50, t: 26, b: 26 };
+  const [s, w] = svgFor($("#cComps"), H);
+  const x = (v) => m.l + (v / 24) * (w - m.l - m.r);
+  [0, 5, 10, 15, 20].forEach((t) => { el("line", { x1: x(t), x2: x(t), y1: m.t, y2: H - m.b, stroke: css("--grid") }, s); txt(s, x(t), H - 12, `${t}x`, "tick", "middle"); });
+  rows.forEach((r, i) => {
+    const yy = m.t + i * 30, stn = r.Company === "Stantec";
+    txt(s, m.l - 10, yy + 15, r.Company, stn ? "val" : "lbl", "end");
+    const p = el("path", { d: `M${x(0)},${yy + 8}H${x(r.EV_EBITDA) - 4}Q${x(r.EV_EBITDA)},${yy + 8} ${x(r.EV_EBITDA)},${yy + 12}V${yy + 18}Q${x(r.EV_EBITDA)},${yy + 22} ${x(r.EV_EBITDA) - 4},${yy + 22}H${x(0)}Z`, fill: css(stn ? "--s2" : "--s1") }, s);
+    hover(p, `<b>${r.Company}</b> (${r.Ticker})<br>EV/EBITDA ${r.EV_EBITDA.toFixed(2)}x`);
+    txt(s, x(r.EV_EBITDA) + 6, yy + 15, `${r.EV_EBITDA.toFixed(1)}x`, "val");
+  });
+  const md = V["Peer median EV/EBITDA"];
+  el("line", { x1: x(md), x2: x(md), y1: m.t - 4, y2: H - m.b, stroke: css("--ink-2"), "stroke-width": 1.2 }, s);
+  txt(s, x(md), m.t - 14, `Peer median ${md.toFixed(1)}x`, "lbl", "middle");
+}
+
+/* ---------- wiring ---------- */
+let page = "perf";
+function renderAll() {
+  if (page === "perf") {
+    renderPerfKpis(); renderSeg(); renderSegTable(); renderMinis();
+    grouped("#cCash", [2023, 2024, 2025], [
+      { name: "Operating cash flow", color: "--s1", values: [2023, 2024, 2025].map((y) => F[y].OperatingCashFlow), label: (i) => `${(F[2023 + i].OperatingCashFlow / F[2023 + i].NetIncome).toFixed(2)}x`, extra: (i) => `Cash conversion ${(F[2023 + i].OperatingCashFlow / F[2023 + i].NetIncome).toFixed(2)}x` },
+      { name: "Net income", color: "--neutral", values: [2023, 2024, 2025].map((y) => F[y].NetIncome) },
+    ], { catLabels: ["FY2023", "FY2024", "FY2025"], ymax: 1000 });
+    renderLev();
+  } else {
+    renderFcstKpis(); renderNR(); renderFCF(); renderBridge(); renderRange(); renderSens(); renderComps();
+  }
+}
+document.querySelectorAll(".tabs button").forEach((b) => b.addEventListener("click", () => {
+  page = b.dataset.tab;
+  document.querySelectorAll(".tabs button").forEach((x) => x.setAttribute("aria-selected", x === b));
+  $("#perf").hidden = page !== "perf"; $("#fcst").hidden = page !== "fcst";
+  if (location.hash !== "#" + page) history.replaceState(null, "", "#" + page);
+  renderAll();
+}));
+if (location.hash === "#fcst") document.querySelector('[data-tab="fcst"]').click(); else renderAll();
+let rt; addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(renderAll, 120); });
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", renderAll);
+</script>
+</body>
+</html>

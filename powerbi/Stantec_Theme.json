@@ -1,0 +1,50 @@
+{
+  "name": "Stantec Financial Dashboard",
+  "dataColors": ["#2A78D6", "#EB6834", "#1BAF7A", "#EDA100", "#E87BA4", "#008300", "#6250D6", "#E34948"],
+  "background": "#FFFFFF",
+  "foreground": "#0B0B0B",
+  "tableAccent": "#2A78D6",
+  "good": "#006300",
+  "neutral": "#B4B2A9",
+  "bad": "#C62F2F",
+  "maximum": "#0D366B",
+  "center": "#6DA7EC",
+  "minimum": "#CDE2FB",
+  "textClasses": {
+    "callout": { "fontFace": "Segoe UI Semibold", "fontSize": 24, "color": "#0B0B0B" },
+    "title": { "fontFace": "Segoe UI Semibold", "fontSize": 12, "color": "#0B0B0B" },
+    "header": { "fontFace": "Segoe UI Semibold", "fontSize": 11, "color": "#0B0B0B" },
+    "label": { "fontFace": "Segoe UI", "fontSize": 10, "color": "#52514E" }
+  },
+  "visualStyles": {
+    "page": {
+      "*": {
+        "background": [{ "color": { "solid": { "color": "#F6F6F3" } }, "transparency": 0 }],
+        "outspace": [{ "color": { "solid": { "color": "#F6F6F3" } }, "transparency": 0 }]
+      }
+    },
+    "*": {
+      "*": {
+        "background": [{ "show": true, "color": { "solid": { "color": "#FFFFFF" } }, "transparency": 0 }],
+        "border": [{ "show": true, "color": { "solid": { "color": "#E1E0D9" } }, "radius": 10, "width": 1 }],
+        "dropShadow": [{ "show": false }],
+        "title": [{ "show": true, "fontSize": 12, "fontFamily": "Segoe UI Semibold", "fontColor": { "solid": { "color": "#0B0B0B" } }, "titleWrap": true }],
+        "subTitle": [{ "show": true, "fontSize": 9, "fontColor": { "solid": { "color": "#52514E" } } }],
+        "padding": [{ "left": 12, "top": 10, "right": 12, "bottom": 10 }],
+        "spacing": [{ "customizeSpacing": true, "spaceAboveSubtitle": 2, "spaceBelowSubTitle": 8, "spaceAbovePlotArea": 8 }],
+        "categoryAxis": [{ "fontSize": 9 }],
+        "valueAxis": [{ "fontSize": 9 }],
+        "legend": [{ "fontSize": 9, "position": "Top" }],
+        "labels": [{ "fontSize": 9 }]
+      }
+    },
+    "textbox": {
+      "*": {
+        "background": [{ "show": false }],
+        "border": [{ "show": false }],
+        "title": [{ "show": false }],
+        "subTitle": [{ "show": false }]
+      }
+    }
+  }
+}
