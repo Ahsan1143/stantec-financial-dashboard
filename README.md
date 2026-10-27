@@ -1,6 +1,6 @@
 # Stantec Financial Performance Dashboard — Power BI
 
-**A two-page Power BI report on Stantec Inc. (TSX/NYSE: STN): FY2023–2025 results by region, margins, cash conversion and leverage, plus a forecast and valuation page driven by my [Stantec forecast & DCF model](data/Stantec_DCF_Model.xlsx).**
+**A two-page Power BI report on Stantec Inc. (TSX/NYSE: STN): FY2023–2025 results by region, margins, cash conversion and leverage, plus a forecast and valuation page driven by my [Stantec forecast & DCF model](https://github.com/Ahsan1143/stantec-dcf-valuation).**
 
 **Author:** Muhammad Ahsan · [LinkedIn](https://www.linkedin.com/in/ahsan1143) · Level I Candidate in the CFA Program
 **Tools:** Power BI (star-schema data model, Power Query, 75 DAX measures), Excel, Python (data pipeline), HTML/JavaScript (web version)
@@ -36,7 +36,7 @@
 | `powerbi/DAX_Measures.dax` | Every measure as plain text, grouped by display folder. Paste it into DAX query view to check the key numbers. |
 | `powerbi/Stantec_Theme.json` | Report theme (colours, fonts, card styling). |
 | `dashboard/index.html` | Web version of the same dashboard, viewable in any browser or on GitHub Pages. |
-| `data/` | `Stantec_DCF_Model.xlsx` (source model) and the extracted JSON dataset. |
+| `data/` | `Stantec_DCF_Model.xlsx` (source model; full write-up in [stantec-dcf-valuation](https://github.com/Ahsan1143/stantec-dcf-valuation)) and the extracted JSON dataset. |
 | `src/build_dataset.py` | Pulls historicals, forecast, WACC, DCF, comps and sensitivity straight from the DCF workbook, adds company-reported regional and leverage figures, and writes the Power BI workbook and the web dashboard. |
 
 ## Data model
